@@ -12,7 +12,7 @@ enum AsyncOperationState: String {
 
 /// AsyncOperation takes care of the boilerplate you need for writing asynchronous NSOperations and adds a couple of useful features: An optional results handler that includes the operation, and properties to store results of the operation.
 
-public class AsyncOperation: Operation {
+open class AsyncOperation: Operation {
     
     var state = AsyncOperationState.Ready {
         willSet {
@@ -46,7 +46,7 @@ public class AsyncOperation: Operation {
     
     /// Override main to start potentially asynchronous work. When the operation is complete, you must call finish(). Do not call super.
     /// This method will not be called it the operation was cancelled before it was started.
-    override public func main() {
+    override open func main() {
         finish()
     }
     

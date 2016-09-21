@@ -9,7 +9,7 @@ import Foundation
 /// AsyncOp is an NSOperation subclass that supports a generic output type and takes care of the boiler plate necessary for asynchronous execution of NSOperations.
 /// You can subclass AsyncOp, but because it's a generic subclass and provides convenient closures for performing work as well has handling cancellation, results, and errors, in many cases you may not need to.
 
-public class AsyncOp<InputType, OutputType>: Operation {
+open class AsyncOp<InputType, OutputType>: Operation {
 
     @nonobjc public required override init() {
         super.init()
@@ -154,7 +154,7 @@ public class AsyncOp<InputType, OutputType>: Operation {
     override public final var isAsynchronous: Bool { return true }
     override public final var isExecuting: Bool { return state == .executing }
     override public final var isFinished: Bool { return state == .finished }
-    override public var isReady: Bool {
+    override open var isReady: Bool {
         guard state == .initial else { return true }
         guard super.isReady else { return false }
         return !paused
