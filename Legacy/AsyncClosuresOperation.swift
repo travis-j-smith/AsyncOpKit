@@ -5,7 +5,7 @@ import Foundation
 /// Pass an AsyncClosure to a AsyncClosuresOperation to perform a potentially asynchronous work inside a closure, marking it as finished when done.
 ///
 /// - parameter closureController: Use the closureController to mark the closure finished, to cancel the parent closures operation, or to check operation status.
-public typealias AsyncClosure = (closureController: AsyncClosureObjectProtocol) -> Void
+public typealias AsyncClosure = (_ closureController: AsyncClosureObjectProtocol) -> Void
 
 /// AsyncClosureObjectProtocol defines the interface for the object passed into AsyncClosures by AsyncClosuresOperations
 @objc public protocol AsyncClosureObjectProtocol : NSObjectProtocol {
@@ -63,12 +63,12 @@ public class AsyncClosuresOperation : AsyncOperation {
     /// :asyncClosure: The AsyncClosure.
     /// :see: addAsyncClosure.
     
-    @objc public convenience init(queueKind: AsyncClosuresQueueKind, asyncClosure: AsyncClosure) {
+    @objc public convenience init(queueKind: AsyncClosuresQueueKind, asyncClosure: @escaping AsyncClosure) {
         self.init(queueKind: queueKind, qualityOfService: .default)
         addAsyncClosure(asyncClosure)
     }
     
-    @objc class public func asyncClosuresOperation(_ queueKind: AsyncClosuresQueueKind, asyncClosure: AsyncClosure) -> AsyncClosuresOperation {
+    @objc class public func asyncClosuresOperation(_ queueKind: AsyncClosuresQueueKind, asyncClosure: @escaping AsyncClosure) -> AsyncClosuresOperation {
         return AsyncClosuresOperation(queueKind: queueKind, asyncClosure: asyncClosure)
     }
     
@@ -91,7 +91,7 @@ public class AsyncClosuresOperation : AsyncOperation {
     /// parameter mark it as finished.
     /// :see: AsyncClosureObjectProtocol
     
-    public final func addAsyncClosure(_ asyncClosure: AsyncClosure) {
+    public final func addAsyncClosure(_ asyncClosure: @escaping AsyncClosure) {
         if isExecuting || isFinished || isCancelled {
             return
         }
@@ -143,7 +143,7 @@ public class AsyncClosuresOperation : AsyncOperation {
 
     internal class AsyncClosureOperation : AsyncOperation, AsyncClosureObjectProtocol {
         
-        init(asyncClosure: AsyncClosure, masterOperation: AsyncClosuresOperation) {
+        init(asyncClosure: @escaping AsyncClosure, masterOperation: AsyncClosuresOperation) {
             self.asyncClosure = asyncClosure
             self.masterOperation = masterOperation
             super.init()
@@ -155,7 +155,7 @@ public class AsyncClosuresOperation : AsyncOperation {
         
         override func main() {
             if let asyncClosure = asyncClosure {
-                asyncClosure(closureController: self)
+                asyncClosure(self)
                 self.asyncClosure = nil
             } else {
                 self.finishClosure()
@@ -193,7 +193,7 @@ extension AsyncClosuresQueueKind {
     public func serialOperationQueueForKind() -> OperationQueue {
         switch self {
         case .main:
-            return OperationQueue.main()
+            return OperationQueue.main
         case .background:
             let serialOperationQueueForKind = OperationQueue()
             serialOperationQueueForKind.maxConcurrentOperationCount = 1

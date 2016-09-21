@@ -30,7 +30,7 @@ public class AsyncOperation: Operation {
                 if isFinished {
                     if let completionHandler = completionHandler {
                         self.completionHandler = nil
-                        completionHandlerQueue.async { completionHandler(finishedOp: self) }
+                        completionHandlerQueue.async { completionHandler(self) }
                     }
                 }
             }
@@ -39,7 +39,7 @@ public class AsyncOperation: Operation {
     
     /// The completionHandler is fired once when the operation finishes on the queue specified by `completionHandlerQueue`. It passes in the finished operation which will indicate whethere the operation was cancelled, had an error, or has a value.
     /// :finishedOp: The finished operation. Downcast if needed inside the compleetion handler.
-    public final var completionHandler: ((finishedOp: AsyncOperation) -> Void)?
+    public final var completionHandler: ((_ finishedOp: AsyncOperation) -> Void)?
     
     /// The operation queue on which the results handler will fire. Default is mainQueue.
     public final var completionHandlerQueue: DispatchQueue = DispatchQueue.main

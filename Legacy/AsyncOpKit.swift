@@ -6,22 +6,22 @@ extension QualityOfService {
     
     /// returns a GCD serial queue for the corresponding QOS
     func createSerialDispatchQueue(_ label: String) -> DispatchQueue {
-        return DispatchQueue(label: label, attributes: [.serial, dispatchQueueAttributes()])
+        return DispatchQueue(label: label, qos: dispatchQueueAttributes())
     }
 
     /// returns GCD's corresponding QOS class
-    private func dispatchQueueAttributes() -> DispatchQueueAttributes {
+    private func dispatchQueueAttributes() -> DispatchQoS {
         switch (self) {
         case .background:
-            return .qosBackground
+            return .background
         case .default:
-            return .qosDefault
+            return .default
         case .userInitiated:
-            return .qosUserInitiated
+            return .userInitiated
         case .userInteractive:
-            return .qosUserInteractive
+            return .userInteractive
         case .utility:
-            return .qosUtility
+            return .utility
         }
     }
     

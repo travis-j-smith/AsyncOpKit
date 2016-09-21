@@ -25,11 +25,11 @@ public class AsyncOp<InputType, OutputType>: Operation {
         }
     }
 
-    public private(set) final var output: AsyncOpValue<OutputType> = .none(.noValue)
+    public fileprivate(set) final var output: AsyncOpValue<OutputType> = .none(.noValue)
 
     // Closures
-    public typealias AsyncOpClosure = (asyncOp: AsyncOp<InputType, OutputType>) -> Void
-    public typealias AsyncOpThrowingClosure = (asyncOp: AsyncOp<InputType, OutputType>) throws -> Void
+    public typealias AsyncOpClosure = (_ asyncOp: AsyncOp<InputType, OutputType>) -> Void
+    public typealias AsyncOpThrowingClosure = (_ asyncOp: AsyncOp<InputType, OutputType>) throws -> Void
     public typealias AsyncOpPreconditionEvaluator = () throws -> AsyncOpPreconditionInstruction
 
     // MARK: Implementation details
@@ -55,7 +55,7 @@ public class AsyncOp<InputType, OutputType>: Operation {
 
         func main_evaluatePreconditions() -> AsyncOpPreconditionInstruction {
 
-            var errors = [ErrorProtocol]()
+            var errors = [Error]()
             var preconditionInstruction = AsyncOpPreconditionInstruction.continue
 
             for evaluator in preconditionEvaluators {
@@ -85,7 +85,7 @@ public class AsyncOp<InputType, OutputType>: Operation {
             if let implementationHandler = self.implementationHandler {
                 self.implementationHandler = nil
                 do {
-                    try implementationHandler(asyncOp: self)
+                    try implementationHandler(self)
                 } catch {
                     finish(with: error)
                 }
@@ -115,12 +115,12 @@ public class AsyncOp<InputType, OutputType>: Operation {
     override public final func cancel() {
         performOnce(onceAction: .cancel) {
             super.cancel()
-            self.cancellationHandler?(asyncOp: self)
+            self.cancellationHandler?(self)
             self.cancellationHandler = nil
         }
     }
 
-    public private(set) final var paused: Bool = false {
+    public fileprivate(set) final var paused: Bool = false {
         willSet {
             guard state == .initial else { return }
             if paused != newValue {
@@ -135,7 +135,7 @@ public class AsyncOp<InputType, OutputType>: Operation {
         }
     }
 
-    private var state = AsyncOpState.initial {
+    fileprivate var state = AsyncOpState.initial {
         willSet {
             if newValue != state {
                 willChangeValueForState(newValue)
@@ -162,17 +162,17 @@ public class AsyncOp<InputType, OutputType>: Operation {
 
     // MARK: Private storage
     private typealias AsyncInputRequest = () -> AsyncOpValue<InputType>
-    private var handlerForAsyncOpInputRequest: AsyncInputRequest?
-    private var preconditionEvaluators = [AsyncOpPreconditionEvaluator]()
-    private var implementationHandler: AsyncOpThrowingClosure?
-    private var completionHandler: AsyncOpClosure?
-    private var completionHandlerQueue: OperationQueue?
-    private var cancellationHandler: AsyncOpClosure?
+    fileprivate var handlerForAsyncOpInputRequest: AsyncInputRequest?
+    fileprivate var preconditionEvaluators = [AsyncOpPreconditionEvaluator]()
+    fileprivate var implementationHandler: AsyncOpThrowingClosure?
+    fileprivate var completionHandler: AsyncOpClosure?
+    fileprivate var completionHandlerQueue: OperationQueue?
+    fileprivate var cancellationHandler: AsyncOpClosure?
 
     // Convenience for performing cancel and finish actions once
-    private var onceGuards: [OnceAction : Bool] = Dictionary(minimumCapacity: OnceAction.count)
-    private let performOnceGuardQ = QualityOfService.userInitiated.createSerialDispatchQueue("asyncOpKit.performOnceGuardQ")
-    private func performOnce(onceAction: OnceAction, @noescape action: () -> ()) {
+    fileprivate var onceGuards: [OnceAction : Bool] = Dictionary(minimumCapacity: OnceAction.count)
+    fileprivate let performOnceGuardQ = QualityOfService.userInitiated.createSerialDispatchQueue("asyncOpKit.performOnceGuardQ")
+    fileprivate func performOnce(onceAction: OnceAction, action: () -> ()) {
         var canPerformAction: Bool?
         performOnceGuardQ.sync {
             canPerformAction = self.onceGuards[onceAction] ?? true
@@ -190,18 +190,18 @@ public class AsyncOp<InputType, OutputType>: Operation {
 
 extension AsyncOp {
 
-    public func onStart(_ implementationHandler: AsyncOpThrowingClosure) {
+    public func onStart(_ implementationHandler: @escaping AsyncOpThrowingClosure) {
         guard state == .initial else { return }
         self.implementationHandler = implementationHandler
     }
 
-    public func whenFinished(whenFinishedQueue completionHandlerQueue: OperationQueue = OperationQueue.main(), completionHandler: AsyncOpClosure) {
+    public func whenFinished(whenFinishedQueue completionHandlerQueue: OperationQueue = OperationQueue.main, completionHandler: @escaping AsyncOpClosure) {
 
         performOnce(onceAction: .whenFinished) {
             guard self.completionHandler == nil else { return }
             if self.isFinished {
                 completionHandlerQueue.addOperation {
-                    completionHandler(asyncOp: self)
+                    completionHandler(self)
                 }
             } else {
                 self.completionHandlerQueue = completionHandlerQueue
@@ -210,7 +210,7 @@ extension AsyncOp {
         }
     }
 
-    public func onCancel(_ cancellationHandler: AsyncOpClosure) {
+    public func onCancel(_ cancellationHandler: @escaping AsyncOpClosure) {
         guard state == .initial else { return }
         self.cancellationHandler = cancellationHandler
     }
@@ -236,7 +236,7 @@ extension AsyncOp {
         finish(with: .none(asyncOpValueError))
     }
 
-    public final func finish(with failureError: ErrorProtocol) {
+    public final func finish(with failureError: Error) {
         finish(with: .none(.Failed(failureError)))
     }
 
@@ -255,7 +255,7 @@ extension AsyncOp {
             guard let completionHandlerQueue = self.completionHandlerQueue else { return }
             self.completionHandlerQueue = nil
             completionHandlerQueue.addOperation {
-                completionHandler(asyncOp: self)
+                completionHandler(self)
             }
         }
     }
@@ -278,12 +278,12 @@ extension AsyncOp {
 
 extension AsyncOp: AsyncOpInputProvider {
 
-    public func addPreconditionEvaluator(_ evaluator: AsyncOpPreconditionEvaluator) {
+    public func addPreconditionEvaluator(_ evaluator: @escaping AsyncOpPreconditionEvaluator) {
         guard state == .initial else { debugPrint(WarnSetInput); return }
         preconditionEvaluators.append(evaluator)
     }
 
-    public func setInputProvider<T where T: AsyncOpInputProvider, T.ProvidedInputValueType == InputType>(_ inputProvider: T) {
+    public func setInputProvider<T>(_ inputProvider: T) where T: AsyncOpInputProvider, T.ProvidedInputValueType == InputType {
         guard state == .initial else { debugPrint(WarnSetInput); return }
         if let inputProvider = inputProvider as? Operation {
             addDependency(inputProvider)

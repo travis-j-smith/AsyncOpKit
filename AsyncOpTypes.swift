@@ -9,7 +9,7 @@ import Foundation
 public enum AsyncOpResult<ValueType> {
 
     case Succeeded(ValueType)
-    case failed(ErrorProtocol)
+    case failed(Error)
     case cancelled
 
     init(asyncOpValue: AsyncOpValue<ValueType>) {
@@ -46,7 +46,7 @@ extension AsyncOp {
 
 }
 
-public protocol AsyncVoidConvertible: NilLiteralConvertible {
+public protocol AsyncVoidConvertible: ExpressibleByNilLiteral {
     init(asyncVoid: AsyncVoid)
 }
 
@@ -89,10 +89,10 @@ public enum AsyncOpValue<ValueType>: AsyncOpInputProvider {
     }
 }
 
-public enum AsyncOpValueErrorType: ErrorProtocol {
+public enum AsyncOpValueErrorType: Error {
     case noValue
     case Cancelled
-    case Failed(ErrorProtocol)
+    case Failed(Error)
 }
 
 extension AsyncOpValue {
@@ -146,7 +146,7 @@ extension AsyncOpValueErrorType {
         }
     }
 
-    public var failureError: ErrorProtocol? {
+    public var failureError: Error? {
         switch self {
         case .Failed(let error):
             return error
@@ -157,20 +157,20 @@ extension AsyncOpValueErrorType {
 
 }
 
-public enum AsyncOpError: ErrorProtocol {
+public enum AsyncOpError: Error {
     case unspecified
     case noResultBecauseOperationNotFinished
     case unimplementedOperation
-    case multiple([ErrorProtocol])
+    case multiple([Error])
     case preconditionFailure
 }
 
 public enum AsyncOpPreconditionInstruction {
     case `continue`
     case cancel
-    case fail(ErrorProtocol)
+    case fail(Error)
 
-    init(errors: [ErrorProtocol]) {
+    init(errors: [Error]) {
         if errors.count == 1 {
             self = .fail(errors[0])
         } else {
