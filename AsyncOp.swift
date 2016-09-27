@@ -40,7 +40,7 @@ open class AsyncOp<InputType, OutputType>: Operation {
         } else {
             preconditionEvaluators.removeAll()
             implementationHandler = nil
-            finish(with: .none(.Cancelled))
+            finish(with: .none(.cancelled))
         }
     }
 
@@ -103,7 +103,7 @@ open class AsyncOp<InputType, OutputType>: Operation {
             case .cancel:
                 implementationHandler = nil
                 cancel()
-                finish(with: .Cancelled)
+                finish(with: .cancelled)
             case .fail(let error):
                 cancel()
                 implementationHandler = nil
@@ -237,7 +237,7 @@ extension AsyncOp {
     }
 
     public final func finish(with failureError: Error) {
-        finish(with: .none(.Failed(failureError)))
+        finish(with: .none(.failed(failureError)))
     }
 
     public final func finish(with asyncOpValue: AsyncOpValue<OutputType>) {

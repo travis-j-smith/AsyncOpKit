@@ -20,9 +20,9 @@ public enum AsyncOpResult<ValueType> {
             switch asyncOpError {
             case .noValue:
                 self = .failed(AsyncOpError.noResultBecauseOperationNotFinished)
-            case .Cancelled:
+            case .cancelled:
                 self = .cancelled
-            case .Failed(let error):
+            case .failed(let error):
                 self = .failed(error)
             }
         }
@@ -91,8 +91,8 @@ public enum AsyncOpValue<ValueType>: AsyncOpInputProvider {
 
 public enum AsyncOpValueErrorType: Error {
     case noValue
-    case Cancelled
-    case Failed(Error)
+    case cancelled
+    case failed(Error)
 }
 
 extension AsyncOpValue {
@@ -130,7 +130,7 @@ extension AsyncOpValueErrorType {
 
     public var cancelled: Bool {
         switch self {
-        case .Cancelled:
+        case .cancelled:
             return true
         default:
             return false
@@ -139,7 +139,7 @@ extension AsyncOpValueErrorType {
 
     public var failed: Bool {
         switch self {
-        case .Failed:
+        case .failed(_):
             return true
         default:
             return false
@@ -148,7 +148,7 @@ extension AsyncOpValueErrorType {
 
     public var failureError: Error? {
         switch self {
-        case .Failed(let error):
+        case .failed(let error):
             return error
         default:
             return nil

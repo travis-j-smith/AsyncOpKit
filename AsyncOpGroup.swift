@@ -24,9 +24,9 @@ public struct AsyncOpConnector<InputType, OutputType> {
                 return .continue
             case .none(let asyncOpValueError):
                 switch asyncOpValueError {
-                case .noValue, .Cancelled:
+                case .noValue, .cancelled:
                     return .cancel
-                case .Failed(let error):
+                case .failed(let error):
                     return .fail(error)
                 }
             }
