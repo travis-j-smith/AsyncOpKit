@@ -21,5 +21,5 @@ Pod::Spec.new do |s|
     s.osx.deployment_target = '10.10'
     s.requires_arc     = true
     s.source_files     = "{AsyncOp.swift,AsyncOpTypes.swift,AsyncOpGroup.swift,Legacy/*.swift}"
-    s.pod_target_xcconfig = { 'SWIFT_VERSION' => '3.0' }
+    s.pod_target_xcconfig = { 'SWIFT_VERSION' => '4.1' }
 end
